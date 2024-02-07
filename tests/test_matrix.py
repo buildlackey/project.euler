@@ -100,6 +100,6 @@ def test_against_challenge_matrix():
 
     matrix = SquareMatrix(elements, 20)
     sum =  matrix.find_largest_product(4)
-    print(f"result: {sum}")
+    print(f"result: {sum}")         # pop this into challenge answer box and it should work 
 
 
