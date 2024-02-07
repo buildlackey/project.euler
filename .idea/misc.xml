@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="sdkName" value="Python 3.8 (eulerproj)" />
+  </component>
+  <component name="CompilerConfiguration">
+    <option name="DEFAULT_COMPILER" />
+    <resourceExtensions />
+    <wildcardResourcePatterns>
+      <entry name="!?*.java" />
+      <entry name="!?*.form" />
+      <entry name="!?*.class" />
+      <entry name="!?*.groovy" />
+      <entry name="!?*.scala" />
+      <entry name="!?*.flex" />
+      <entry name="!?*.kt" />
+      <entry name="!?*.clj" />
+    </wildcardResourcePatterns>
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="false">
+        <processorPath useClasspath="true" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHome" value="Bundled (Maven 3)" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.8 (eulerproj)" project-jdk-type="Python SDK" />
+  <component name="SbtLocalSettings">
+    <option name="modificationStamps">
+      <map>
+        <entry key="$PROJECT_DIR$/../../scala-code/nodescala" value="1430163980000" />
+        <entry key="$PROJECT_DIR$/../../scala/scala-samples/akka-http" value="1441788906069" />
+        <entry key="$USER_HOME$/dev/elastic4s" value="1487895311538" />
+        <entry key="$USER_HOME$/scala/akka-fiddling" value="1442997394346" />
+        <entry key="$USER_HOME$/scala/akka-http-microservice" value="1442703070908" />
+        <entry key="$USER_HOME$/scala/nodescala" value="1430163980000" />
+        <entry key="$USER_HOME$/scala/prog-scala-2nd-ed-code-examples" value="1441091035440" />
+        <entry key="$USER_HOME$/scala/sbt/sbt-in-action-examples/chapter3" value="1441936630023" />
+        <entry key="$USER_HOME$/scala/sbt/sbt-in-action-examples/chapter4" value="1441936630024" />
+        <entry key="$USER_HOME$/scala/sbt/sbt-in-action-examples/chapter5" value="4325809890073" />
+        <entry key="$USER_HOME$/scala/scala-samples/akka-fsm" value="1441788906069" />
+        <entry key="$USER_HOME$/scala/spray-rest-api" value="1442720032000" />
+        <entry key="$USER_HOME$/scala/spray-slick-swagger" value="1442365414000" />
+        <entry key="$USER_HOME$/scala/spray-swagger-sample" value="1442999836384" />
+        <entry key="$USER_HOME$/scala/spray-template" value="1442716062843" />
+        <entry key="$USER_HOME$/scala/spray-tutorial" value="1442108634587" />
+        <entry key="$USER_HOME$/scala/suggestions" value="1430777854000" />
+        <entry key="$USER_HOME$/spray-slick-swagger" value="1442036996000" />
+        <entry key="/tmp/learning-examples" value="1445317254543" />
+      </map>
+    </option>
+    <option name="externalProjectsViewState">
+      <projects_view />
+    </option>
+  </component>
+  <component name="ScalaSbtSettings">
+    <option name="maximumHeapSize" value="2048" />
+  </component>
+</project>
