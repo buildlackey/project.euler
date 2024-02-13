@@ -1,9 +1,5 @@
-from  src.tictactoe.model import *
-from  src.tictactoe.view import *
-
-from pprint import pprint
-
-import pytest
+from tictactoe.model import *
+from tictactoe.view import *
 
 
 def test_board_full():
@@ -78,7 +74,7 @@ def test_minimax_finds_winning_move_at_center():
     state.get_next_player_to_move()     # bump
 
     UI().render_board(state)
-    best_next_move = MinMaxStrategy().get_next_move(state)
+    best_next_move = MinMaxStrategy().get_next_move(state, state.peek_next_player_to_move())
     assert (best_next_move == (1,1))
 
 
@@ -92,5 +88,5 @@ def test_minimax_finds_winning_move_with_one_move_left():
                 state.get_next_player_to_move()     # bump
 
     UI().render_board(state)
-    best_next_move = MinMaxStrategy().get_next_move(state)
+    best_next_move = MinMaxStrategy().get_next_move(state, state.peek_next_player_to_move())
     assert (best_next_move == (2,2))

@@ -1,7 +1,7 @@
 import re
 import logging
 
-from src.tictactoe.model import *
+from tictactoe.model import *
 
 """
 Acquires user input, writes current state of game board to console, and announces the status of the
@@ -30,7 +30,7 @@ class UI:
             print(f"\nGame has been won by {winner.name}. Congratulations!\n")
         else:
             print(f"\nGame resulted in a draw\n")
-        self.render_board(self.board.grid)
+        self.render_board(state)
 
     def get_user_input(self, prompt, input_validator):
         while True:
@@ -77,7 +77,7 @@ class UI:
         return state
 
     def display_game_grid(self, grid):
-        print(f"\nGame Board:\n{grid.render_as_string()}")
+        print(f"\nGame Board:\n{grid.r()}")
 
     """
     Prompts player to enter the coordinates of a free cell where they wish to make their next move,

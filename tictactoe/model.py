@@ -38,7 +38,7 @@ class GameBoard:
         return self.available_moves() == []
 
     def empty(self) -> bool:
-        return len(self.available_moves()) == self.span
+        return len(self.available_moves()) == self.span**2
 
     def available_moves(self) -> List[Tuple[int, int]]:
         moves = []
@@ -53,8 +53,6 @@ class GameBoard:
             raise ValueError(f"attempt to update non-open cell: ({row},{col})")
         else:
             self.grid[row, col] = symbol
-
-        print("DONE")
 
 
 class Player:
@@ -125,7 +123,7 @@ class GameState:
         return self.board.full() or self.game_won()
 
 
-verbose = True
+verbose = False
 
 
 def dbg(msg: str):
@@ -219,7 +217,9 @@ class MinMaxStrategy:
 
         return (best_move_found, best_move_value)
 
-    def get_next_move(self, state: GameState) -> Tuple[int, int]:
-        assert (not state.board.full() and not state.game_won() and state.peek_next_player_to_move().is_bot_player)
+    def get_next_move(self, state: GameState, player: Player) -> Tuple[int, int]:
+        assert (not state.board.full())
+        assert (not state.game_won())
+        assert (player.is_bot_player)
         best_next_move, _ = self.search(copy.deepcopy(state))
         return best_next_move

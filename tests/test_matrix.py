@@ -1,5 +1,4 @@
-from  src.euler.squarematrix import *
-
+from euler.squarematrix import *
 
 import pytest
 

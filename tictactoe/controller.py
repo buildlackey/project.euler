@@ -1,14 +1,4 @@
-import re
-import logging
-
-from src.tictactoe.model import *
-from src.tictactoe.view import *
-
-
-"""
-Acquires user input, writes current state of game board to console, and announces the status of the
-game (winning plays, draws, etc).
-"""
+from tictactoe.view import *
 
 
 
@@ -22,7 +12,8 @@ class GameSessionController:
 
     def __init__(self):
         self.ui = UI()
-        self.state = self.ui.init_state_from_user_input()
+        #self.state = self.ui.init_state_from_user_input()
+        self.state = get_state()
         self.bot_strategy = MinMaxStrategy()
 
     def clear_grid(self):
@@ -33,10 +24,11 @@ class GameSessionController:
             self.clear_grid()
 
             while not self.state.winner():
-                self.ui.display_game_grid(self.grid)
+                self.ui.render_board(self.state)
                 player = self.state.get_next_player_to_move()
                 if player.is_bot_player:
-                    row, col = self.bot_strategy.get_next_move(self.state)
+                    row, col = self.bot_strategy.get_next_move(self.state, player)
+                    self.state.board.update_cell(row, col, player.symbol)
                     self.ui.announce_bot_player_move(player, row, col)  # shows move the AI chose
                 else:
                     row, col = self.ui.prompt_for_coords_of_next_move(self.state.board, player)
@@ -48,4 +40,15 @@ class GameSessionController:
                         return
 
 
+def get_state():
+    board = GameBoard(3)
+    player1 = Player("bob", O_CELL, True)
+    player2 = Player("joe", X_CELL, False)
+    players = [ player1, player2 ]
+    state = GameState(board, 0, players)
+    return state
+
+
+if __name__ == "__main__":
+    GameSessionController().run()
 
