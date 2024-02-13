@@ -20,6 +20,8 @@ class GameSessionController:
         self.state.board = GameBoard(3)
 
     def run(self):
+        print("\nStarting new game:")
+
         while True:
             while not self.state.winner():
                 self.ui.render_board(self.state)
@@ -37,7 +39,7 @@ class GameSessionController:
                     if (self.ui.get_users_yes_no_response("\nPlay again? (y/n)") == 'N'):
                         return
                     else:
-                        print("\nStarting Game:")
+                        print("\nStarting new game:")
                         self.clear_grid()
 
 

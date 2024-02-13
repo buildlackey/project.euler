@@ -145,19 +145,13 @@ class Score:
             def edge_cell_bump_value():     # bump score for more attractive board positions
                 on_edge = any( (row == self.board.span-1 or col == self.board.span-1) for (row,col) in cells)
                 if (on_edge):
-                    index1 = cells[0][0]
-                    print(f"index1: {index1}")
-                    index2 = cells[0][1]
-                    print(f"index2: {index2}")
-                    value = self.board.grid[index1, index2]
-                    print(f"++ value: {value}")
+                    value = self.board.grid[(cells[0][0]), (cells[0][1])]
                     return 1 * value  # convert to positive or negative 'bonus value'
                 else:
                     return 0
 
             def center_cell_bump_value():     # bump score for more attractive board positions
                 mid_point = self.board.span // 2
-                print(f"MID_POINT: {mid_point}")
                 on_center = any( (row == mid_point or col == mid_point) for (row,col) in cells)
                 if (on_center ):
                     return 2 * self.board.grid[mid_point,mid_point]  # convert to positive or negative 'bonus value'
@@ -170,11 +164,7 @@ class Score:
             is_winning_sequence = abs(cell_sum) == self.board.span
 
             if (is_winning_sequence):                # bump score for center and edge squares
-                bump1 = edge_cell_bump_value()
-                print(f"bump1: {bump1}")
-                bump_value = center_cell_bump_value()
-                print(f"bump_value: {bump_value}")
-                cell_sum = cell_sum + bump1 + bump_value
+                cell_sum = cell_sum + edge_cell_bump_value() + center_cell_bump_value()
             return is_winning_sequence, cell_sum
 
 
