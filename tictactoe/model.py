@@ -135,47 +135,77 @@ class Score:
     def __init__(self, board: GameBoard):
         sp = board.span
         self.board = board
-        pass
 
     # returns a tuple indicating 1) whether game has been won yet, and 2) the game score
     def value(self):
 
         # returns a tuple indicating 1) whether sequence of cells has owner, and 2) the score for sequence
         def sequence_score(cells: List[Tuple[int, int]]) -> Tuple[bool, int]:
+
+            def edge_cell_bump_value():     # bump score for more attractive board positions
+                on_edge = any( (row == self.board.span-1 or col == self.board.span-1) for (row,col) in cells)
+                if (on_edge):
+                    index1 = cells[0][0]
+                    print(f"index1: {index1}")
+                    index2 = cells[0][1]
+                    print(f"index2: {index2}")
+                    value = self.board.grid[index1, index2]
+                    print(f"++ value: {value}")
+                    return 1 * value  # convert to positive or negative 'bonus value'
+                else:
+                    return 0
+
+            def center_cell_bump_value():     # bump score for more attractive board positions
+                mid_point = self.board.span // 2
+                print(f"MID_POINT: {mid_point}")
+                on_center = any( (row == mid_point or col == mid_point) for (row,col) in cells)
+                if (on_center ):
+                    return 2 * self.board.grid[mid_point,mid_point]  # convert to positive or negative 'bonus value'
+                else:
+                    return 0
+
             cell_values = [self.board.grid[row, col] for row, col in cells]
             cell_sum = sum(cell_values)
             dbg(f"sequence_score for {list(cells)}: {cell_sum}")
-            i = abs(cell_sum)
-            span = self.board.span
-            dbg(f"span: {span}")
-            return i == span, cell_sum
+            is_winning_sequence = abs(cell_sum) == self.board.span
+
+            if (is_winning_sequence):                # bump score for center and edge squares
+                bump1 = edge_cell_bump_value()
+                print(f"bump1: {bump1}")
+                bump_value = center_cell_bump_value()
+                print(f"bump_value: {bump_value}")
+                cell_sum = cell_sum + bump1 + bump_value
+            return is_winning_sequence, cell_sum
+
+
+        best_score = 0
 
         # check horizontal sequence of cells for each row
         for row in self.board.ycoords:
             has_owner, score = sequence_score([(row, col) for col in self.board.xcoords])
-            if (has_owner):
-                return (True, score)
+            if (has_owner and  abs(score)  > abs(best_score)):
+                best_score = score
 
         # check vertical sequence of cells for each column
         for col in self.board.xcoords:
             has_owner, score = sequence_score([(row, col) for row in self.board.ycoords])
-            if (has_owner):
-                return (True, score)
+            if (has_owner and  abs(score)  > abs(best_score)):
+                best_score = score
 
         # check on diagonal down and to right
         diag_to_right_coords = [(index, index) for index in self.board.ycoords]
         has_owner, score = sequence_score(diag_to_right_coords)
-        if (has_owner):
-            return (True, score)
+        if (has_owner and  abs(score)  > abs(best_score)):
+            best_score = score
 
         # check on diagonal down and to left
         has_owner, score = sequence_score(
             [(row, self.board.span - row - 1) for row in self.board.ycoords])
         dbg(f"diagonal down and to left: {has_owner} {score}")
-        if (has_owner):
-            return (True, score)
+        if (has_owner and  abs(score)  > abs(best_score)):
+            best_score = score
 
-        return (False, UNDEFINED_SCORE)
+        return (best_score != 0 , best_score)
 
 
 class Move:
@@ -227,11 +257,6 @@ class MinMaxStrategy:
         return (best_move_found, best_move_value)
 
     def get_next_move(self, state: GameState, player: Player, disable_game_won_check = False) -> Tuple[int, int]:
-        if state.board.empty():
-            mid_point = state.board.span // 2
-            return mid_point, mid_point
-
-
         assert (not state.board.full())
         assert (disable_game_won_check or not state.game_won())     # can turn off this check for testing
         assert (player.is_bot_player)

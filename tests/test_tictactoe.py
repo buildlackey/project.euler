@@ -55,8 +55,8 @@ def test_correct_score_for_win_on_diagonal():
     state.update_board(0, 0, state.peek_next_player_to_move())
 
     UI().render_board(state)
-    _, score= Score(state.board).value()
-    assert(score == -3)
+    game_won, score= Score(state.board).value()
+    assert(score == -6 and game_won)    # -6, not -3 because diagonal is 'hottest'
 
 
 def test_minimax_blocks_opponent_win_on_diagonal():
