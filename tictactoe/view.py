@@ -19,13 +19,13 @@ class UI:
                 row_values.append(str(reverse_mapping[cell]).rjust(state.board.span))
             aligned_strings.append(" ".join(row_values))
         result = "\n\n".join(aligned_strings)
-        print(f"grid render result:\n{result}")
+        print(f"\n{result}")
         return result
 
     def announce_winner(self, state: GameState):
         assert (state.game_done())
 
-        if state.game_won():  # strange bug that requires me to check for 2nd condition
+        if state.game_won():
             winner = state.get_player_who_moved_last()
             print(f"\nGame has been won by {winner.name}. Congratulations!\n")
         else:
@@ -115,4 +115,6 @@ class UI:
         return (coords[0], coords[1])
 
     def announce_bot_player_move(self, player, row, col):
-        print(f"\nPlayer {player.name} selected cell at ({row},{col}) for next move")
+        print(f"\nPlayer {player.name}  claimed  ({row},{col}) with {reverse_mapping[player.symbol]}")
+
+

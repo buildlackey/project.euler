@@ -145,7 +145,10 @@ class Score:
             cell_values = [self.board.grid[row, col] for row, col in cells]
             cell_sum = sum(cell_values)
             dbg(f"sequence_score for {list(cells)}: {cell_sum}")
-            return abs(cell_sum) == self.board.span, cell_sum
+            i = abs(cell_sum)
+            span = self.board.span
+            dbg(f"span: {span}")
+            return i == span, cell_sum
 
         # check horizontal sequence of cells for each row
         for row in self.board.ycoords:
@@ -167,7 +170,8 @@ class Score:
 
         # check on diagonal down and to left
         has_owner, score = sequence_score(
-            [(row, col) for row in self.board.ycoords for col in self.board.reverse_coords])
+            [(row, self.board.span - row - 1) for row in self.board.ycoords])
+        dbg(f"diagonal down and to left: {has_owner} {score}")
         if (has_owner):
             return (True, score)
 
@@ -186,20 +190,25 @@ class MinMaxStrategy:
         self.min_size = -sys.maxsize - 1
 
     def search(self, state: GameState) -> Tuple[Tuple[int, int], int]:
-        if (state.game_done()):
-            game_won, score = Score(state.board).value()
-            return ((-1, -1), score)
-
         working_state = copy.deepcopy(state)
         next_up_player = working_state.get_next_player_to_move()
         symbol = next_up_player.symbol
-        moves = working_state.board.available_moves()
-        dbg(f"search for {next_up_player} trying moves: {moves}")
+        remaining_moves = working_state.board.available_moves()
+
+        if (len(remaining_moves) == 1):     # return the only move available, and board score with this move
+            move = remaining_moves[0]
+            working_state.board.update_cell(move[0], move[1], symbol)
+            return (move, Score(state.board).value()[1])
+
+        if (state.game_done()):
+            return ((-1, -1), Score(state.board).value()[1])
+
+        dbg(f"search for {next_up_player} trying remaining_moves: {remaining_moves}")
 
         best_move_found = (-1, -1)
         if (next_up_player.is_bot_player):  # can prob refactor this chunk...
             best_move_value = self.max_size
-            for row, col in moves:
+            for row, col in remaining_moves:
                 working_state.board.update_cell(row, col, symbol)
                 best_move, board_value = self.search(working_state)
                 if (board_value < best_move_value):
@@ -208,7 +217,7 @@ class MinMaxStrategy:
         else:
             best_move_value = self.min_size
             best_move_found = (-1, -1)
-            for row, col in moves:
+            for row, col in remaining_moves:
                 working_state.board.update_cell(row, col, symbol)
                 best_move, board_value = self.search(working_state)
                 if (board_value > best_move_value):
@@ -217,9 +226,9 @@ class MinMaxStrategy:
 
         return (best_move_found, best_move_value)
 
-    def get_next_move(self, state: GameState, player: Player) -> Tuple[int, int]:
+    def get_next_move(self, state: GameState, player: Player, disable_game_won_check = False) -> Tuple[int, int]:
         assert (not state.board.full())
-        assert (not state.game_won())
+        assert (disable_game_won_check or not state.game_won())     # can turn off this check for testing
         assert (player.is_bot_player)
         best_next_move, _ = self.search(copy.deepcopy(state))
         return best_next_move

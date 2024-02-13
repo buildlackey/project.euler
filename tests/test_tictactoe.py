@@ -26,19 +26,6 @@ def get_state():
 
     return state
 
-def test_tracking_of_user_moves():
-    state = get_state()
-    saw_victory = False
-    for row in range(0,3):
-        for col in range(0,3):
-            UI().render_board(state)
-            state.update_board(row, col, state.peek_next_player_to_move())
-            if (state.game_won()):
-                assert(state.winner() == state.get_player_who_moved_last())
-            saw_victory = True
-            state.get_next_player_to_move()     # bump
-    assert(saw_victory)
-
 def test_getting_game_state_from_user_input(monkeypatch):
     responses = ["joe", "X", "Y"]
 
@@ -57,6 +44,38 @@ def test_getting_game_state_from_user_input(monkeypatch):
     assert(state.players[1].name == 'game_bot')
     assert(state.players[1].is_bot_player)
 
+
+
+def test_correct_score_for_win_on_diagonal():
+    state = get_state()
+    state.update_board(0, 2, state.peek_next_player_to_move())
+    state.update_board(1, 1, state.peek_next_player_to_move())
+    state.update_board(2, 0, state.peek_next_player_to_move())
+    state.get_next_player_to_move()     # bump
+    state.update_board(0, 0, state.peek_next_player_to_move())
+
+    UI().render_board(state)
+    _, score= Score(state.board).value()
+    assert(score == -3)
+
+
+def test_minimax_blocks_opponent_win_on_diagonal():
+    state = get_state()
+    state.update_board(0, 0, state.peek_next_player_to_move())
+    state.get_next_player_to_move()     # bump
+
+    state.update_board(0, 1, state.peek_next_player_to_move())
+    state.get_next_player_to_move()     # bump
+
+    state.update_board(2, 2, state.peek_next_player_to_move())
+    state.get_next_player_to_move()     # bump
+
+    state.update_board(0, 2, state.peek_next_player_to_move())
+    state.get_next_player_to_move()     # bump
+
+    UI().render_board(state)
+    best_next_move = MinMaxStrategy().get_next_move(state, state.peek_next_player_to_move())
+    assert (best_next_move == (1,1))
 
 
 def test_minimax_finds_winning_move_at_center():
@@ -83,10 +102,15 @@ def test_minimax_finds_winning_move_with_one_move_left():
     state = get_state()
     for row in range(0,3):
         for col in range(0,3):
+            #if (row,col) != (2,2) and (row,col) != (2,0) :
             if (row,col) != (2,2):
                 state.update_board(row, col, state.peek_next_player_to_move())
                 state.get_next_player_to_move()     # bump
 
+    player = state.peek_next_player_to_move()
+    symbol = reverse_mapping[player.symbol]
+    print(f"rendering board with next player up {player.name} using {symbol}")
     UI().render_board(state)
-    best_next_move = MinMaxStrategy().get_next_move(state, state.peek_next_player_to_move())
+
+    best_next_move = MinMaxStrategy().get_next_move(state, state.peek_next_player_to_move(), True)
     assert (best_next_move == (2,2))

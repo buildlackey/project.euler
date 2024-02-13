@@ -17,12 +17,10 @@ class GameSessionController:
         self.bot_strategy = MinMaxStrategy()
 
     def clear_grid(self):
-        self.grid = GameBoard(3)
+        self.state.board = GameBoard(3)
 
     def run(self):
         while True:
-            self.clear_grid()
-
             while not self.state.winner():
                 self.ui.render_board(self.state)
                 player = self.state.get_next_player_to_move()
@@ -38,6 +36,9 @@ class GameSessionController:
                     self.ui.announce_winner(self.state)
                     if (self.ui.get_users_yes_no_response("\nPlay again? (y/n)") == 'N'):
                         return
+                    else:
+                        print("\nStarting Game:")
+                        self.clear_grid()
 
 
 def get_state():
