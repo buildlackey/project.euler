@@ -227,6 +227,11 @@ class MinMaxStrategy:
         return (best_move_found, best_move_value)
 
     def get_next_move(self, state: GameState, player: Player, disable_game_won_check = False) -> Tuple[int, int]:
+        if state.board.empty():
+            mid_point = state.board.span // 2
+            return mid_point, mid_point
+
+
         assert (not state.board.full())
         assert (disable_game_won_check or not state.game_won())     # can turn off this check for testing
         assert (player.is_bot_player)
