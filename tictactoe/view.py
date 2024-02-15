@@ -63,7 +63,7 @@ class UI:
         symbol = self.get_restricted_input("Please choose letter representing your moves ('X' or 'O'): ", ["X", "O"])
         goes_first = self.get_restricted_input("Do you want to go first? (Y/N): ", ["Y", "N"])
 
-        if goes_first:
+        if goes_first == "Y":
             next_player_to_move = 0
         else:
             next_player_to_move = 1

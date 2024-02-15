@@ -20,8 +20,37 @@ def get_state():            # return state for users bob the bot, and joe,  bob 
     players = [ player1, player2 ]
     return GameState(board, 0, players)
 
-def test_getting_game_state_from_user_input(monkeypatch):
-    responses = ["joe", "X", "Y"]
+def test_getting_game_state_from_user_input_human_first(monkeypatch):
+    validate_first_mover_input(monkeypatch, ["joe", "X", "Y"])
+
+
+def test_getting_game_state_from_user_input_bot_first(monkeypatch):
+    validate_first_mover_input(monkeypatch, ["joe", "X", "N"], True)
+
+
+def validate_first_mover_input(monkeypatch, responses, first_mover_is_bot = False):
+
+    def mock_input(prompt):
+        nonlocal responses
+        response = responses.pop(0)
+        return response
+
+    monkeypatch.setattr('builtins.input', mock_input)
+    ui = UI()
+    state = ui.init_state_from_user_input()
+    assert (not state.board.full())
+    assert (state.players[0].name == 'JOE')
+    assert (not state.players[0].is_bot_player)
+    assert (state.players[1].name == 'game_bot')
+    assert (state.players[1].is_bot_player)
+    if (first_mover_is_bot):
+        assert(state.current_player.is_bot_player)
+    else:
+        assert(not state.current_player.is_bot_player)
+
+
+def test_getting_game_state_from_user_input2(monkeypatch):
+    responses = ["joe", "X", "N"]
 
     def mock_input(prompt):
         nonlocal responses
@@ -37,6 +66,7 @@ def test_getting_game_state_from_user_input(monkeypatch):
     assert(not state.players[0].is_bot_player)
     assert(state.players[1].name == 'game_bot')
     assert(state.players[1].is_bot_player)
+    assert(state.current_player.is_bot_player)
 
 
 
