@@ -9,9 +9,9 @@ import sys
 
 #  Cell and game states
 #
-X_CELL = 1  # marked by player 'x'
-O_CELL = -1  # marked by player 'o'
-OPEN_CELL = 0  # open to be marked by either player
+X_CELL = 1          # internal integer code value for cell marked by player 'x'
+O_CELL = -1         # internal integer code value for cell marked by player 'o'
+OPEN_CELL = 0       # internal integer code value for cell open to be marked by either player
 
 symbol_char_to_code_map = {
     "X": X_CELL,
@@ -24,10 +24,6 @@ symbol_code_to_char_map = {
     0: "_"
 }
 
-UNDEFINED_SCORE = -9
-NO_WINNER_YET = -10
-
-
 
 
 COUNT = 1  # marked by player 'x'
@@ -36,7 +32,7 @@ def incr():
     COUNT = COUNT + 1
     return COUNT
 
-def sprint(msg):
+def sprint(msg):        # had issues with pycharm output, so this logs to a file so i can debug
     if (verbose):
         log_file_path = "/tmp/log"
         try:
@@ -111,9 +107,6 @@ class Player:
         else:
             return current > proposed_update        # proposed score is lower, so better for O_CELL player
 
-
-
-
     def __repr__(self):
         name = f"name={repr(self.name)}"
         symbol = f"symbol={repr(symbol_code_to_char_map[self.symbol])}/{repr(self.symbol)}"
@@ -142,13 +135,11 @@ class GameState:
 
 
     # Update board so that given cell position is marked using symbol of current player
-    def claim_cell_for_curr_player(self, row: int, col: int, swap_current_player_after = False) -> Self:
+    def claim_cell_for_curr_player(self, row: int, col: int) -> Self:
         if (self.board.grid[row, col] != OPEN_CELL):
             raise ValueError(f"attempt to update non-open cell: ({row},{col})")
         dup = copy.deepcopy(self)
         dup.board.grid[row, col] = dup.current_player.symbol
-        if (swap_current_player_after):
-            dup.current_player = dup.current_player.get_opposing_player()
         return dup
 
     def game_won(self):

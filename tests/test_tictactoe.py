@@ -69,17 +69,21 @@ def test_getting_game_state_from_user_input2(monkeypatch):
     assert(state.current_player.is_bot_player)
 
 
+def claim_cell_and_update_current_user_to_opponent(state: GameState, row, col) -> GameState:
+    return  state.claim_cell_for_curr_player(row, col).next_players_turn()
+
 
 def test_correct_score_for_win_on_diagonal():
-    state = get_state().\
-        claim_cell_for_curr_player(0, 0, True).\
-        claim_cell_for_curr_player(1, 2, True)
+
+    state = get_state()
+    state = claim_cell_and_update_current_user_to_opponent(state,0, 0)
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 2)
     UI().render_board(state)
 
-    state = state.\
-        claim_cell_for_curr_player(1, 1, True). \
-        claim_cell_for_curr_player(0, 2, True). \
-        claim_cell_for_curr_player(2, 2, True)
+
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 1)
+    state = claim_cell_and_update_current_user_to_opponent(state,0, 2)
+    state = claim_cell_and_update_current_user_to_opponent(state,2, 2)
     UI().render_board(state)
 
     game_won, score= Score(state.board).value()
@@ -87,19 +91,15 @@ def test_correct_score_for_win_on_diagonal():
 
 
 def test_minimax_blocks_opponent_win_on_diagonal():
-    state = get_state(). \
-        claim_cell_for_curr_player(1, 2, True). \
-        claim_cell_for_curr_player(2, 2, True)
-    UI().render_board(state)
-
-    state = state. \
-        claim_cell_for_curr_player(0, 2, True). \
-        claim_cell_for_curr_player(1, 1, True)
+    state = get_state()
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 2)
+    state = claim_cell_and_update_current_user_to_opponent(state,2, 2)
     UI().render_board(state)
 
 
-    pp = state.get_next_player_to_move()
-    print(f"next up: {pp}")
+    state = claim_cell_and_update_current_user_to_opponent(state,0, 2)
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 1)
+    UI().render_board(state)
 
     best_next_move = MinMaxStrategy().get_next_move(state)
     assert (best_next_move == (0,0))
@@ -112,34 +112,20 @@ def test_minimax_finds_winning_move_at_center():
     assert (best_next_move == (1,1))
 
 
-
-
-def test_minimax_finds_winning_move_at_center2():
-    state = get_state()
-    UI().render_board(state)
-
-
-
 def test_minimax_finds_winning_move_with_3_moves_left():
-
     state = get_state()
-    pp = state.get_next_player_to_move()
-    print(f"next up: {pp}")
-
-    
-    state = state. \
-        claim_cell_for_curr_player(1, 2, True). \
-        claim_cell_for_curr_player(2, 2, True)
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 2)
+    state = claim_cell_and_update_current_user_to_opponent(state,2, 2)
     UI().render_board(state)
 
-    state = state. \
-        claim_cell_for_curr_player(0, 2, True). \
-        claim_cell_for_curr_player(1, 1, True)
+
+    state = claim_cell_and_update_current_user_to_opponent(state,0, 2)
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 1)
     UI().render_board(state)
 
-    state = state. \
-        claim_cell_for_curr_player(0, 0, True). \
-        claim_cell_for_curr_player(1, 0, True)
+
+    state = claim_cell_and_update_current_user_to_opponent(state,0, 0)
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 0)
     UI().render_board(state)
 
 
