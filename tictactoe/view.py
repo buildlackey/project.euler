@@ -7,8 +7,6 @@ from tictactoe.model import *
 Acquires user input, writes current state of game board to console, and announces the status of the
 game (winning plays, draws, etc).
 """
-
-
 class UI:
     def render_board(self, state: GameState) -> str:
         aligned_strings = []
@@ -16,7 +14,7 @@ class UI:
             row_values = []
             for col in range(state.board.span):
                 cell = state.board.grid[row, col]
-                row_values.append(str(reverse_mapping[cell]).rjust(state.board.span))
+                row_values.append(str(symbol_code_to_char_map[cell]).rjust(state.board.span))
             aligned_strings.append(" ".join(row_values))
         result = "\n\n".join(aligned_strings)
         print(f"\n{result}")
@@ -66,17 +64,17 @@ class UI:
         goes_first = self.get_restricted_input("Do you want to go first? (Y/N): ", ["Y", "N"])
 
         if goes_first:
-            next_player_to_move = 1
-        else:
             next_player_to_move = 0
-
-        opponent = Player(player_name, symbol_mapping[symbol])
-        if (symbol == X_CELL):
-            opponent_symbol  = O_CELL
         else:
-            opponent_symbol  = X_CELL
-        bot = Player("game_bot", opponent_symbol, True)
-        state = GameState(GameBoard(3), next_player_to_move, [opponent, bot])
+            next_player_to_move = 1
+
+        human_player = Player(player_name, symbol_char_to_code_map[symbol])
+        if (symbol_char_to_code_map[symbol]  == X_CELL):
+            bot_player_symbol  = O_CELL
+        else:
+            bot_player_symbol  = X_CELL
+        bot = Player("game_bot", bot_player_symbol, True)
+        state = GameState(GameBoard(3), next_player_to_move, [human_player, bot])
 
         return state
 
@@ -119,6 +117,6 @@ class UI:
         return (coords[0], coords[1])
 
     def announce_bot_player_move(self, player, row, col):
-        print(f"\nPlayer {player.name}  claimed  ({row},{col}) with {reverse_mapping[player.symbol]}")
+        print(f"\nPlayer {player.name}  claimed  ({row},{col}) with {symbol_code_to_char_map[player.symbol]}")
 
 

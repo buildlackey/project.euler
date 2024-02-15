@@ -13,12 +13,12 @@ X_CELL = 1  # marked by player 'x'
 O_CELL = -1  # marked by player 'o'
 OPEN_CELL = 0  # open to be marked by either player
 
-symbol_mapping = {
+symbol_char_to_code_map = {
     "X": X_CELL,
     "0": O_CELL
 }
 
-reverse_mapping = {
+symbol_code_to_char_map = {
     X_CELL: "X",
     O_CELL: "0",
     0: "_"
@@ -116,7 +116,7 @@ class Player:
 
     def __repr__(self):
         name = f"name={repr(self.name)}"
-        symbol = f"symbol={repr(reverse_mapping[self.symbol])}/{repr(self.symbol)}"
+        symbol = f"symbol={repr(symbol_code_to_char_map[self.symbol])}/{repr(self.symbol)}"
         init_board_val = f"init_board_val {self.init_best_score() }:"
         return f"Player({name}, {symbol} is_bot={repr(self.is_bot_player)}, {init_board_val} )"
 
@@ -130,12 +130,15 @@ class GameState:
         self.current_player = self.players[next_to_move]
 
 
-
     # Update state to set current player to be the opponent of the previous current player
     def next_players_turn(self) -> Self:
         dup = copy.deepcopy(self)
         dup.current_player = dup.current_player.get_opposing_player()
         return dup
+
+    # Returns player whose turn it is to move. This will not change until next_players_turn is called
+    def get_next_player_to_move(self) -> Player:
+        return self.current_player
 
 
     # Update board so that given cell position is marked using symbol of current player
@@ -147,30 +150,6 @@ class GameState:
         if (swap_current_player_after):
             dup.current_player = dup.current_player.get_opposing_player()
         return dup
-
-
-    # Returns next player 'p', and resets  'next player' pointer to point to the opponent of player 'p'
-    def get_next_player_to_move(self) -> Player:
-        return self.current_player
-
-    # Returns next player to move 'p'. Unline get_next_player_to_move, has no side effects (no reset of next pointer)
-    def peek_next_player_to_move(self) -> Player:
-        return self.players[self.next_to_move]
-
-    def get_player_who_moved_last(self) -> Player:
-        if (self.board.empty()):
-            raise ValueError("illegal call to get_player_who_moved_last - no one moved yet")
-        return self.players[self.next_to_move]
-
-
-    def copy(self, next_player_to_move: Player) -> Self:
-        dup = copy.deepcopy(self)
-        if (next_player_to_move == dup.players[0]):
-            dup.next_to_move = 0
-        else:
-            dup.next_to_move = 1
-        return self
-
 
     def game_won(self):
         has_won, score = Score(self.board).value()
@@ -193,10 +172,6 @@ class GameState:
 
     def game_done(self):
         return self.board.full() or self.game_won()
-
-    def opponent_of_current_player(self):
-        return self.get_next_player_to_move().opposing_player
-
 
 
 verbose = False
