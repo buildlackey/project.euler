@@ -13,12 +13,12 @@ def test_board_full():
     assert board.available_moves() == []
 
 
-def get_state():            # return state for users bob the bot, and joe,  bob goes first
+def get_state(next_to_move=0):            # return state for users bob the bot, and joe,  bob goes first
     board = GameBoard(3)
     player1 = Player("bob", O_CELL, True)
     player2 = Player("joe", X_CELL, False)
     players = [ player1, player2 ]
-    return GameState(board, 0, players)
+    return GameState(board, next_to_move, players)
 
 def test_getting_game_state_from_user_input_human_first(monkeypatch):
     validate_first_mover_input(monkeypatch, ["joe", "X", "Y"])
@@ -84,6 +84,53 @@ def test_minimax_blocks_opponent_win_on_diagonal():
 
     best_next_move = MinMaxStrategy().get_next_move(state)
     assert (best_next_move == (0,0))
+
+
+def test_minimax_blocks_opponent_win_on_diagonal_2_plays_left():
+    state = get_state(1)
+    state = claim_cell_and_update_current_user_to_opponent(state,2, 2)
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 1)
+    UI().render_board(state)
+
+
+    state = claim_cell_and_update_current_user_to_opponent(state,0, 2)
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 2)
+    UI().render_board(state)
+
+
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 0)
+    state = claim_cell_and_update_current_user_to_opponent(state,2, 1)
+    state = claim_cell_and_update_current_user_to_opponent(state,0, 1)
+    UI().render_board(state)
+
+    best_next_move = MinMaxStrategy().get_next_move(state)
+    assert (best_next_move == (0,0))
+
+
+def test_minimax_blocks_opponent_win_on_bottom_row_2_plays_left():
+    state = get_state(1)
+
+
+    print(f"curr player: {state.current_player}")
+    state = claim_cell_and_update_current_user_to_opponent(state,2, 2)
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 1)
+    UI().render_board(state)
+
+
+    state = claim_cell_and_update_current_user_to_opponent(state,0, 2)
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 2)
+    UI().render_board(state)
+
+
+    state = claim_cell_and_update_current_user_to_opponent(state,1, 0)
+    state = claim_cell_and_update_current_user_to_opponent(state,0, 0)
+    state = claim_cell_and_update_current_user_to_opponent(state,2, 1)
+    UI().render_board(state)
+
+    
+    best_next_move = MinMaxStrategy().get_next_move(state)
+    assert (best_next_move == (2,0))
+
 
 
 def test_minimax_finds_winning_move_at_center():

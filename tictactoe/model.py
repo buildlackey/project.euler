@@ -32,6 +32,21 @@ def incr():
     COUNT = COUNT + 1
     return COUNT
 
+
+verbose = False
+
+def check_verbose():
+    print(f"verbose: {verbose}")
+
+def set_verbose():
+    global verbose
+    verbose = True
+
+def dbg(msg: str):
+    if (verbose):
+        sprint(msg)
+
+
 def sprint(msg):        # had issues with pycharm output, so this logs to a file so i can debug
     if (verbose):
         log_file_path = "/tmp/log"
@@ -165,13 +180,6 @@ class GameState:
         return self.board.full() or self.game_won()
 
 
-verbose = False
-
-
-def dbg(msg: str):
-    if (verbose):
-        sprint(msg)
-
 
 class Score:
     def __init__(self, board: GameBoard):
@@ -278,12 +286,6 @@ class MinMaxStrategy:
 
 
     def __search__(self, state: GameState) -> int:
-        moves_to_try = state.board.available_moves()
-        if (len(moves_to_try) == 1):     # calculate board score after updating to only move available
-            move = moves_to_try[0]
-            new_state = state.claim_cell_for_curr_player(move[0], move[1])
-            return Score(new_state.board).value()[1]
-
         if (state.game_done()):
             return  Score(state.board).value()[1]
 
@@ -293,6 +295,7 @@ class MinMaxStrategy:
 
 
     def get_next_move(self, state: GameState, disable_game_won_check = False) -> Tuple[int, int]:
+        dbg(f"get_next_move for starting")
         assert (not state.board.full())
         assert (disable_game_won_check or not state.game_won())     # can turn off this check for testing
         assert (state.current_player.is_bot_player)
@@ -308,9 +311,7 @@ class MinMaxStrategy:
 
 
 if __name__ == "__main__":
-
-   xxx = incr()
-   print(f"xxx: {xxx}")
-   xxx = incr()
-   print(f"xxx: {xxx}")
+   check_verbose()
+   set_verbose()
+   check_verbose()
 
