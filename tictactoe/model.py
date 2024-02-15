@@ -15,12 +15,12 @@ OPEN_CELL = 0       # internal integer code value for cell open to be marked by 
 
 symbol_char_to_code_map = {
     "X": X_CELL,
-    "0": O_CELL
+    "O": O_CELL
 }
 
 symbol_code_to_char_map = {
     X_CELL: "X",
-    O_CELL: "0",
+    O_CELL: "O",
     0: "_"
 }
 
