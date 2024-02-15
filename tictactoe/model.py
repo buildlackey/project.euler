@@ -1,13 +1,16 @@
 from typing import TypeVar, List
 from typing import Tuple
+from typing_extensions import Self
+
 
 import copy
 import numpy as np
+import sys
 
 #  Cell and game states
 #
-X_CELL = 1  # marked by player x
-O_CELL = -1  # marked by player x
+X_CELL = 1  # marked by player 'x'
+O_CELL = -1  # marked by player 'o'
 OPEN_CELL = 0  # open to be marked by either player
 
 symbol_mapping = {
@@ -23,6 +26,30 @@ reverse_mapping = {
 
 UNDEFINED_SCORE = -9
 NO_WINNER_YET = -10
+
+
+
+
+COUNT = 1  # marked by player 'x'
+def incr():
+    global COUNT
+    COUNT = COUNT + 1
+    return COUNT
+
+def sprint(msg):
+    if (verbose):
+        log_file_path = "/tmp/log"
+        try:
+            # Open the file in append mode (a) to add new messages without overwriting existing content
+            with open(log_file_path, 'a') as log_file:
+                # Write the message to the log file
+                log_file.write(msg + "\n")
+                log_file.flush()
+                print(msg)
+                sys.stdout.flush()
+        except Exception as e:
+            sprint(f"Error logging message: {e}")
+
 
 
 class GameBoard:
@@ -48,40 +75,83 @@ class GameBoard:
                     moves.append((i, j))
         return moves
 
-    def update_cell(self, row, col, symbol):
-        if (self.grid[row, col] != OPEN_CELL):
-            raise ValueError(f"attempt to update non-open cell: ({row},{col})")
-        else:
-            self.grid[row, col] = symbol
-
 
 class Player:
-    def __init__(self, name: str, symbol: str, is_bot_player=False):
+
+    def __init__(self, name: str, symbol: int, is_bot_player=False):
         self.name = name
         self.symbol = symbol
         self.is_bot_player = is_bot_player
+        self.opposing_player: Player
+
+
+    def set_opposing_player(self, opponent: Self):
+        self.opposing_player = opponent
+
+
+    def get_opposing_player(self):
+        return self.opposing_player
 
     def opponent_symbol(self):
+        return self.get_opposing_player().symbol
+
+
+    # Determines 'worst case' board value for this opponent (used in minimax search)
+    def init_best_score(self):
         if (self.symbol == X_CELL):
-            return O_CELL
+            return -sys.maxsize - 1     # minimum int value
         else:
-            return X_CELL
+            return sys.maxsize          # maximum int value
+
+
+    # Determine if alternative score is 'better'. For X_CELL player, prefer highest, for O_CELL, seek lowest possible
+    def prefer_updated_score(self, current: int, proposed_update: int):
+        if (self.symbol == X_CELL):
+            return current <= proposed_update        # proposed score is higher, so better for X_CELL player
+        else:
+            return current > proposed_update        # proposed score is lower, so better for O_CELL player
+
+
+
 
     def __repr__(self):
-        return f"Player(name={repr(self.name)}, symbol={repr(self.symbol)}, is_bot={repr(self.is_bot_player)})"
+        name = f"name={repr(self.name)}"
+        symbol = f"symbol={repr(reverse_mapping[self.symbol])}/{repr(self.symbol)}"
+        init_board_val = f"init_board_val {self.init_best_score() }:"
+        return f"Player({name}, {symbol} is_bot={repr(self.is_bot_player)}, {init_board_val} )"
 
 
 class GameState:
     def __init__(self, board: GameBoard, next_to_move: int, players: List[Player]):
         self.board = board
-        self.next_to_move = next_to_move
         self.players = players
+        self.players[0].set_opposing_player(self.players[1])
+        self.players[1].set_opposing_player(self.players[0])
+        self.current_player = self.players[next_to_move]
+
+
+
+    # Update state to set current player to be the opponent of the previous current player
+    def next_players_turn(self) -> Self:
+        dup = copy.deepcopy(self)
+        dup.current_player = dup.current_player.get_opposing_player()
+        return dup
+
+
+    # Update board so that given cell position is marked using symbol of current player
+    def claim_cell_for_curr_player(self, row: int, col: int, swap_current_player_after = False) -> Self:
+        if (self.board.grid[row, col] != OPEN_CELL):
+            raise ValueError(f"attempt to update non-open cell: ({row},{col})")
+        dup = copy.deepcopy(self)
+        dup.board.grid[row, col] = dup.current_player.symbol
+        if (swap_current_player_after):
+            dup.current_player = dup.current_player.get_opposing_player()
+        return dup
+
 
     # Returns next player 'p', and resets  'next player' pointer to point to the opponent of player 'p'
     def get_next_player_to_move(self) -> Player:
-        next = self.next_to_move
-        self.next_to_move = (self.next_to_move + 1) % 2
-        return self.players[next]
+        return self.current_player
 
     # Returns next player to move 'p'. Unline get_next_player_to_move, has no side effects (no reset of next pointer)
     def peek_next_player_to_move(self) -> Player:
@@ -90,15 +160,17 @@ class GameState:
     def get_player_who_moved_last(self) -> Player:
         if (self.board.empty()):
             raise ValueError("illegal call to get_player_who_moved_last - no one moved yet")
+        return self.players[self.next_to_move]
 
-        index = (self.next_to_move + 1) % 2
-        return self.players[index]
 
-    # Update given cell position using symbol of 'player_doing_update'
-    def update_board(self, row: int, col: int, player_doing_update: Player):
-        assert (player_doing_update == self.peek_next_player_to_move())
+    def copy(self, next_player_to_move: Player) -> Self:
+        dup = copy.deepcopy(self)
+        if (next_player_to_move == dup.players[0]):
+            dup.next_to_move = 0
+        else:
+            dup.next_to_move = 1
+        return self
 
-        self.board.update_cell(row, col, player_doing_update.symbol)
 
     def game_won(self):
         has_won, score = Score(self.board).value()
@@ -122,13 +194,17 @@ class GameState:
     def game_done(self):
         return self.board.full() or self.game_won()
 
+    def opponent_of_current_player(self):
+        return self.get_next_player_to_move().opposing_player
+
+
 
 verbose = False
 
 
 def dbg(msg: str):
     if (verbose):
-        print(msg)
+        sprint(msg)
 
 
 class Score:
@@ -209,46 +285,66 @@ class MinMaxStrategy:
         self.max_size = sys.maxsize
         self.min_size = -sys.maxsize - 1
 
-    def search(self, state: GameState) -> Tuple[Tuple[int, int], int]:
-        working_state = copy.deepcopy(state)
-        next_up_player = working_state.get_next_player_to_move()
-        symbol = next_up_player.symbol
-        remaining_moves = working_state.board.available_moves()
 
-        if (len(remaining_moves) == 1):     # return the only move available, and board score with this move
-            move = remaining_moves[0]
-            working_state.board.update_cell(move[0], move[1], symbol)
-            return (move, Score(state.board).value()[1])
+    def __find_best_score_and_move__(self, state: GameState) -> Tuple[Tuple[int,int],int]:
+        moves_to_try = state.board.available_moves()
+        best_move_value = state.current_player.init_best_score()  # initialize to extreme 'worst' value
+        padlen = 9 - len(moves_to_try)
+        padstr =  " " * padlen
+        inc = incr()
+        sprint(f"{padstr}Checking at {inc} for {state.current_player} : init_best: {best_move_value} {moves_to_try}")
+
+        optimal_row = -1
+        optimal_col = -1
+        for row, col in moves_to_try:
+            sprint(f"{padstr}Trying {row}/{col} with curr best {best_move_value}  available_moves:   {len(moves_to_try)} |  {moves_to_try}")
+            board_value = self.__search__(state.claim_cell_for_curr_player(row, col)) # check score assuming curr player owns row/col
+            sprint(f"{padstr}CELL:{row}/{col} candidate best move value: {board_value} with remaining = {moves_to_try}")
+            if (state.current_player.prefer_updated_score(best_move_value, board_value)):
+                sprint(f"{padstr}CELL:{row}/{col} candidate {board_value} better than {best_move_value}")
+                best_move_value = board_value
+                optimal_row = row
+                optimal_col = col
+
+
+        sprint(f"{padstr}Returning {optimal_row}/{optimal_col} for {moves_to_try}")
+        return  (optimal_row, optimal_col), best_move_value
+
+
+    def __search__(self, state: GameState) -> int:
+        moves_to_try = state.board.available_moves()
+        if (len(moves_to_try) == 1):     # calculate board score after updating to only move available
+            move = moves_to_try[0]
+            new_state = state.claim_cell_for_curr_player(move[0], move[1])
+            return Score(new_state.board).value()[1]
 
         if (state.game_done()):
-            return ((-1, -1), Score(state.board).value()[1])
+            return  Score(state.board).value()[1]
 
-        dbg(f"search for {next_up_player} trying remaining_moves: {remaining_moves}")
+        # recursively enter best score search while setting current player to opponent
+        return self.__find_best_score_and_move__(state.next_players_turn())[1]
 
-        best_move_found = (-1, -1)
-        if (next_up_player.is_bot_player):  # can prob refactor this chunk...
-            best_move_value = self.max_size
-            for row, col in remaining_moves:
-                working_state.board.update_cell(row, col, symbol)
-                best_move, board_value = self.search(working_state)
-                if (board_value < best_move_value):
-                    best_move_value = board_value
-                    best_move_found = (row, col)
-        else:
-            best_move_value = self.min_size
-            best_move_found = (-1, -1)
-            for row, col in remaining_moves:
-                working_state.board.update_cell(row, col, symbol)
-                best_move, board_value = self.search(working_state)
-                if (board_value > best_move_value):
-                    best_move_value = board_value
-                    best_move_found = (row, col)
 
-        return (best_move_found, best_move_value)
 
-    def get_next_move(self, state: GameState, player: Player, disable_game_won_check = False) -> Tuple[int, int]:
+    def get_next_move(self, state: GameState, disable_game_won_check = False) -> Tuple[int, int]:
         assert (not state.board.full())
         assert (disable_game_won_check or not state.game_won())     # can turn off this check for testing
-        assert (player.is_bot_player)
-        best_next_move, _ = self.search(copy.deepcopy(state))
-        return best_next_move
+        assert (state.current_player.is_bot_player)
+
+        midpoint = state.board.span // 2             # always grab center position if open
+        if state.board.grid[midpoint, midpoint] == OPEN_CELL:
+            return (midpoint, midpoint)
+
+        (row,col),score = self.__find_best_score_and_move__(state)
+        dbg(f"get_next_move for {state.current_player} resulted in: {row}/{col} -> {score}")
+        return row,col
+
+
+
+if __name__ == "__main__":
+
+   xxx = incr()
+   print(f"xxx: {xxx}")
+   xxx = incr()
+   print(f"xxx: {xxx}")
+

@@ -8,23 +8,17 @@ def test_board_full():
     assert len(board.available_moves()) == 9
     for col in range(0,3):
         for row in range(0,3):
-            board.update_cell(row, col, X_CELL)
+            board.grid[row, col] =  X_CELL
     assert board.full()
     assert board.available_moves() == []
 
 
-def get_state():
+def get_state():            # return state for users bob the bot, and joe,  bob goes first
     board = GameBoard(3)
     player1 = Player("bob", O_CELL, True)
     player2 = Player("joe", X_CELL, False)
     players = [ player1, player2 ]
-    state = GameState(board, 0, players)
-
-    assert(state.get_next_player_to_move() == player1)   # bump pointer to other player
-    assert(state.get_next_player_to_move() == player2)   # bump pointer to other player
-    assert(state.peek_next_player_to_move() == player1)  # check with no bump
-
-    return state
+    return GameState(board, 0, players)
 
 def test_getting_game_state_from_user_input(monkeypatch):
     responses = ["joe", "X", "Y"]
@@ -47,70 +41,77 @@ def test_getting_game_state_from_user_input(monkeypatch):
 
 
 def test_correct_score_for_win_on_diagonal():
-    state = get_state()
-    state.update_board(0, 2, state.peek_next_player_to_move())
-    state.update_board(1, 1, state.peek_next_player_to_move())
-    state.update_board(2, 0, state.peek_next_player_to_move())
-    state.get_next_player_to_move()     # bump
-    state.update_board(0, 0, state.peek_next_player_to_move())
-
+    state = get_state().\
+        claim_cell_for_curr_player(0, 0, True).\
+        claim_cell_for_curr_player(1, 2, True)
     UI().render_board(state)
+
+    state = state.\
+        claim_cell_for_curr_player(1, 1, True). \
+        claim_cell_for_curr_player(0, 2, True). \
+        claim_cell_for_curr_player(2, 2, True)
+    UI().render_board(state)
+
     game_won, score= Score(state.board).value()
     assert(score == -6 and game_won)    # -6, not -3 because diagonal is 'hottest'
 
 
 def test_minimax_blocks_opponent_win_on_diagonal():
-    state = get_state()
-    state.update_board(0, 0, state.peek_next_player_to_move())
-    state.get_next_player_to_move()     # bump
-
-    state.update_board(0, 1, state.peek_next_player_to_move())
-    state.get_next_player_to_move()     # bump
-
-    state.update_board(2, 2, state.peek_next_player_to_move())
-    state.get_next_player_to_move()     # bump
-
-    state.update_board(0, 2, state.peek_next_player_to_move())
-    state.get_next_player_to_move()     # bump
-
+    state = get_state(). \
+        claim_cell_for_curr_player(1, 2, True). \
+        claim_cell_for_curr_player(2, 2, True)
     UI().render_board(state)
-    best_next_move = MinMaxStrategy().get_next_move(state, state.peek_next_player_to_move())
-    assert (best_next_move == (1,1))
+
+    state = state. \
+        claim_cell_for_curr_player(0, 2, True). \
+        claim_cell_for_curr_player(1, 1, True)
+    UI().render_board(state)
+
+
+    pp = state.get_next_player_to_move()
+    print(f"next up: {pp}")
+
+    best_next_move = MinMaxStrategy().get_next_move(state)
+    assert (best_next_move == (0,0))
 
 
 def test_minimax_finds_winning_move_at_center():
     state = get_state()
-    state.update_board(0, 0, state.peek_next_player_to_move())
-    state.get_next_player_to_move()     # bump
-
-    state.update_board(0, 1, state.peek_next_player_to_move())
-    state.get_next_player_to_move()     # bump
-
-    state.update_board(2, 2, state.peek_next_player_to_move())
-    state.get_next_player_to_move()     # bump
-
-    state.update_board(0, 2, state.peek_next_player_to_move())
-    state.get_next_player_to_move()     # bump
-
     UI().render_board(state)
-    best_next_move = MinMaxStrategy().get_next_move(state, state.peek_next_player_to_move())
+    best_next_move = MinMaxStrategy().get_next_move(state)
     assert (best_next_move == (1,1))
 
 
 
-def test_minimax_finds_winning_move_with_one_move_left():
-    state = get_state()
-    for row in range(0,3):
-        for col in range(0,3):
-            #if (row,col) != (2,2) and (row,col) != (2,0) :
-            if (row,col) != (2,2):
-                state.update_board(row, col, state.peek_next_player_to_move())
-                state.get_next_player_to_move()     # bump
 
-    player = state.peek_next_player_to_move()
-    symbol = reverse_mapping[player.symbol]
-    print(f"rendering board with next player up {player.name} using {symbol}")
+def test_minimax_finds_winning_move_at_center2():
+    state = get_state()
     UI().render_board(state)
 
-    best_next_move = MinMaxStrategy().get_next_move(state, state.peek_next_player_to_move(), True)
-    assert (best_next_move == (2,2))
+
+
+def test_minimax_finds_winning_move_with_3_moves_left():
+
+    state = get_state()
+    pp = state.get_next_player_to_move()
+    print(f"next up: {pp}")
+
+    
+    state = state. \
+        claim_cell_for_curr_player(1, 2, True). \
+        claim_cell_for_curr_player(2, 2, True)
+    UI().render_board(state)
+
+    state = state. \
+        claim_cell_for_curr_player(0, 2, True). \
+        claim_cell_for_curr_player(1, 1, True)
+    UI().render_board(state)
+
+    state = state. \
+        claim_cell_for_curr_player(0, 0, True). \
+        claim_cell_for_curr_player(1, 0, True)
+    UI().render_board(state)
+
+
+    best_next_move = MinMaxStrategy().get_next_move(state, True)
+    assert (best_next_move == (0,1))

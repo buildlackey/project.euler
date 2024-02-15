@@ -12,8 +12,7 @@ class GameSessionController:
 
     def __init__(self):
         self.ui = UI()
-        #self.state = self.ui.init_state_from_user_input()
-        self.state = get_state()
+        self.state = self.ui. init_state_from_user_input()
         self.bot_strategy = MinMaxStrategy()
 
     def clear_grid(self):
@@ -25,14 +24,14 @@ class GameSessionController:
         while True:
             while not self.state.winner():
                 self.ui.render_board(self.state)
-                player = self.state.get_next_player_to_move()
-                if player.is_bot_player:
-                    row, col = self.bot_strategy.get_next_move(self.state, player)
-                    self.state.board.update_cell(row, col, player.symbol)
-                    self.ui.announce_bot_player_move(player, row, col)  # shows move the AI chose
+                current_player = self.state.get_next_player_to_move()
+                if  current_player.is_bot_player:
+                    row, col = self.bot_strategy.get_next_move(self.state)
+                    self.state = self.state.claim_cell_for_curr_player(row, col)
+                    self.ui.announce_bot_player_move(current_player, row, col)  # shows move the AI chose
                 else:
-                    row, col = self.ui.prompt_for_coords_of_next_move(self.state.board, player)
-                    self.state.board.update_cell(row, col, player.symbol)
+                    row, col = self.ui.prompt_for_coords_of_next_move(self.state.board, current_player)
+                    self.state = self.state.claim_cell_for_curr_player(row, col)
 
                 if self.state.game_done():
                     self.ui.announce_winner(self.state)
@@ -41,7 +40,8 @@ class GameSessionController:
                     else:
                         print("\nStarting new game:")
                         self.clear_grid()
-
+                else:
+                    self.state = self.state.next_players_turn()
 
 def get_state():
     board = GameBoard(3)

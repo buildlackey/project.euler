@@ -20,14 +20,14 @@ class UI:
             aligned_strings.append(" ".join(row_values))
         result = "\n\n".join(aligned_strings)
         print(f"\n{result}")
+        print("\n")
         return result
 
     def announce_winner(self, state: GameState):
         assert (state.game_done())
 
         if state.game_won():
-            winner = state.get_player_who_moved_last()
-            print(f"\nGame has been won by {winner.name}. Congratulations!\n")
+            print(f"\nGame has been won by {state.get_next_player_to_move()}. Congratulations!\n")
         else:
             print(f"\nGame resulted in a draw\n")
         self.render_board(state)
@@ -71,7 +71,11 @@ class UI:
             next_player_to_move = 0
 
         opponent = Player(player_name, symbol_mapping[symbol])
-        bot = Player("game_bot", opponent.opponent_symbol(), True)
+        if (symbol == X_CELL):
+            opponent_symbol  = O_CELL
+        else:
+            opponent_symbol  = X_CELL
+        bot = Player("game_bot", opponent_symbol, True)
         state = GameState(GameBoard(3), next_player_to_move, [opponent, bot])
 
         return state
