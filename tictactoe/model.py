@@ -260,11 +260,11 @@ class MinMaxStrategy:
         self.min_size = -sys.maxsize - 1
 
 
-    def __find_best_score_and_move__(self, state: GameState) -> Tuple[Tuple[int,int],int]:
+    def __find_best_score_and_move__(self, state: GameState, alpha: int, beta: int) -> Tuple[Tuple[int,int],int]:
         moves_to_try = state.board.available_moves()
-        best_move_value = state.current_player.init_best_score()  # initialize to extreme 'worst' value
+        best_move_value = state.current_player.init_best_score()    # initialize to extreme 'worst' value
         padlen = 9 - len(moves_to_try)
-        padstr =  " " * padlen
+        padstr =  " " * padlen                                      # this is for debugging
         inc = incr()
         sprint(f"{padstr}Checking at {inc} for {state.current_player} : init_best: {best_move_value} {moves_to_try}")
 
@@ -272,7 +272,7 @@ class MinMaxStrategy:
         optimal_col = -1
         for row, col in moves_to_try:
             sprint(f"{padstr}Trying {row}/{col} with curr best {best_move_value}  available_moves:   {len(moves_to_try)} |  {moves_to_try}")
-            board_value = self.__search__(state.claim_cell_for_curr_player(row, col)) # check score assuming curr player owns row/col
+            board_value = self.__recurse__(state.claim_cell_for_curr_player(row, col)) # check score assuming curr player owns row/col
             sprint(f"{padstr}CELL:{row}/{col} candidate best move value: {board_value} with remaining = {moves_to_try}")
             if (state.current_player.prefer_updated_score(best_move_value, board_value)):
                 sprint(f"{padstr}CELL:{row}/{col} candidate {board_value} better than {best_move_value}")
@@ -285,13 +285,12 @@ class MinMaxStrategy:
         return  (optimal_row, optimal_col), best_move_value
 
 
-    def __search__(self, state: GameState) -> int:
+    def __recurse__(self, state: GameState, alpha, beta) -> int:
         if (state.game_done()):
             return  Score(state.board).value()[1]
 
         # recursively enter best score search while setting current player to opponent
-        return self.__find_best_score_and_move__(state.next_players_turn())[1]
-
+        return self.__find_best_score_and_move__(state.next_players_turn(), alpha, beta)[1]
 
 
     def get_next_move(self, state: GameState, disable_game_won_check = False) -> Tuple[int, int]:
@@ -300,7 +299,7 @@ class MinMaxStrategy:
         assert (disable_game_won_check or not state.game_won())     # can turn off this check for testing
         assert (state.current_player.is_bot_player)
 
-        midpoint = state.board.span // 2             # always grab center position if open
+        midpoint = state.board.span // 2                            # simple heuristic: grab center position if open
         if state.board.grid[midpoint, midpoint] == OPEN_CELL:
             return (midpoint, midpoint)
 
